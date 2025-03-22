@@ -1,0 +1,6 @@
+@CvCodeFirst_HostAddress = http://localhost:5085
+
+GET {{CvCodeFirst_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
