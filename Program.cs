@@ -1,5 +1,5 @@
 
-using CvCodeFirst.Properties.Data;
+using CvCodeFirst.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace CvCodeFirst
@@ -17,7 +17,7 @@ namespace CvCodeFirst
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-            builder.Services.AddDbContext<CvDataDBContext>(options =>
+            builder.Services.AddDbContext<CvApiDBContext>(options =>
             {
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
             });

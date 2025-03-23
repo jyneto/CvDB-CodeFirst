@@ -1,28 +1,23 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
-namespace CvCodeFirst.Properties.Models
+namespace CvCodeFirst.DTOs
 {
-    public class Education
+    public class EducationDTO
     {
-        [Key]
-        public int EducationID { get; set; }
-
         [Required]
         [MaxLength(50)]
         public required string School { get; set; }
 
         [Required]
-        [MaxLength(50)]
+        [MaxLength(100)]
         public required string Degree { get; set; }
 
+        [Required]
         public required DateTime StartDate { get; set; }
 
-        public DateTime EndDate { get; set; }
+        public DateTime? EndDate { get; set; }
 
-
-        [ForeignKey("Person")]
+        [Required]
         public int PersonID { get; set; }
-        public Person? Persons { get; set; }
     }
 }
