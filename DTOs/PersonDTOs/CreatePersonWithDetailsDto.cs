@@ -1,8 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using CvCodeFirst.Models;
+using System.ComponentModel.DataAnnotations;
 
-namespace CvCodeFirst.DTOs
+namespace CvCodeFirst.DTOs.PersonDTOs
 {
-    public class PersonDto
+    public class CreatePersonWithDetailsDto
     {
         [Required]
         [MaxLength(50)]
@@ -20,5 +21,7 @@ namespace CvCodeFirst.DTOs
         [MaxLength(500)]
         public required string Description { get; set; }
 
+        public List<Education> Educations { get; set; }
+        public List<WorkExperience> WorkExperiences { get; set; }
     }
 }

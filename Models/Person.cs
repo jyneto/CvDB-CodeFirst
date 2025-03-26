@@ -11,13 +11,13 @@ namespace CvCodeFirst.Models
        
         public required string Email { get; set; }
 
-        public required int Phone { get; set; }
+        public required string Phone { get; set; }
 
         public required string Description { get; set; }
 
         //Relations
         public List<Education> Educations { get; set; }
-        public List<WorkExperience> Experiences { get; set; }
+        public List<WorkExperience> WorkExperiences { get; set; }
 
     }
 }
