@@ -1,5 +1,6 @@
 
 using CvCodeFirst.Data;
+using CvCodeFirst.EndPoints;
 using Microsoft.EntityFrameworkCore;
 
 namespace CvCodeFirst
@@ -35,7 +36,10 @@ namespace CvCodeFirst
 
             app.UseAuthorization();
 
-            
+            PersonEndpoints.RegisterEndpoints(app);
+            EducationEndPoints.RegisterEndpoints(app);
+            WorkExperienceEndPoints.RegisterEndpoints(app);
+
 
             app.Run();
         }
