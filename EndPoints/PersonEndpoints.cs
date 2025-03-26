@@ -1,6 +1,7 @@
 ﻿using CvCodeFirst.Data;
 using CvCodeFirst.DTOs;
 using CvCodeFirst.DTOs.PersonDTO;
+using CvCodeFirst.DTOs.PersonDTOs;
 using CvCodeFirst.Helpers;
 using CvCodeFirst.Models;
 using Microsoft.EntityFrameworkCore;
@@ -15,66 +16,8 @@ namespace CvCodeFirst.EndPoints
     {
         public static void RegisterEndpoints(WebApplication app)
         {
-            //Get the people in the database
-            app.MapGet("/persons", async (CvApiDBContext dbcontext) =>
-            {
-                var person = await dbcontext.Person
-                    .Include(p => p.Educations)
-                    .Include(p => p.WorkExperiences)
-                    .Select(p => new PersonDetailDto
-                    {
-                        Name = p.Name,
-                        Email = p.Email,
-                        Description = p.Description,
-                        Educations = p.Educations,
-                        WorkExperiences = p.WorkExperiences
-
-                    })
-                    .ToListAsync();
-                return Results.Ok(person);
-
-            });
-
-            //Get/Retrieve a specific person by ID 
-            app.MapGet("/api/persons", async (CvApiDBContext dbContext) =>
-            {
-                var persons = await dbContext.Person.ToListAsync();
-                return Results.Ok(persons);
-            });
-
-            app.MapGet("/api/persons/{id}", async (int id, CvApiDBContext dbContext) =>
-            {
-                var (isValid, errors) = InputValidator.ValidateId(id);
-                if (!isValid) return Results.BadRequest(errors);
-
-                var person = await dbContext.Person
-                    .Include(p => p.Educations)
-                    .Include(p => p.WorkExperiences)
-                    .FirstOrDefaultAsync(p => p.ID == id);
-
-                if (person == null) 
-                {
-                    return Results.NotFound();
-                }
-
-                return Results.Ok(person);
-
-                var dto = new PersonDetailDto
-                {
-                    Name = person.Name,
-                    Email = person.Email,
-                    Description = person.Description,
-                    Educations = person.Educations,
-                    WorkExperiences = person.WorkExperiences
-                };
-
-                return Results.Ok(dto);
-                   
-            });
-
-            //Add a new person with with details
-
-            app.MapPost("/api/persons", async (PersonDto dto, CvApiDBContext db) =>
+            //Create a person 
+            app.MapPost("/api/persons", async (CreatePersonWithDetailsDto dto, CvApiDBContext dbContext) =>
             {
                 var (isValid, errors) = InputValidator.Validate(dto);
                 if (!isValid) return Results.BadRequest(errors);
@@ -84,51 +27,116 @@ namespace CvCodeFirst.EndPoints
                     Name = dto.Name,
                     Email = dto.Email,
                     Phone = dto.Phone,
-                    Description = dto.Description ?? ""
+                    Description = dto.Description,
+                    Educations = dto.Educations,
+                    WorkExperiences = dto.WorkExperiences
                 };
 
-                db.Person.Add(person);
-                await db.SaveChangesAsync();
+                dbContext.Person.Add(person);
+                await dbContext.SaveChangesAsync();
 
-                return Results.Created($"/api/persons/{person.ID}", person);
+                // Optional: return PersonDetailDto
+                var result = new PersonDetailDto
+                {
+                    Name = person.Name,
+                    Email = person.Email,
+                    Phone = person.Phone,
+                    Description = person.Description,
+                    Educations = person.Educations,
+                    WorkExperiences = person.WorkExperiences
+                };
+
+                return Results.Created($"/api/persons/{person.ID}", result);
+            });
+
+            //Get the people in the database
+            app.MapGet("/api/persons", async (CvApiDBContext dbContext) =>
+            {
+                var persons = await dbContext.Person
+                    .Include(p => p.Educations)
+                    .Include(p => p.WorkExperiences)
+                    .ToListAsync();
+
+                var result = persons.Select(p => new PersonDetailDto
+                {
+                    Name = p.Name,
+                    Email = p.Email,
+                    Phone = p.Phone,
+                    Description = p.Description,
+                    Educations = p.Educations,
+                    WorkExperiences = p.WorkExperiences
+                });
+
+                return Results.Ok(result);
+            });
+
+
+            //Get/Retrieve a specific person by ID 
+            app.MapGet("/api/persons/{id}", async (int id, CvApiDBContext dbContext) =>
+            {
+                var person = await dbContext.Person
+                    .Include(p => p.Educations)
+                    .Include(p => p.WorkExperiences)
+                    .FirstOrDefaultAsync(p => p.ID == id);
+                if (person == null)
+                {
+                    return Results.NotFound("Entered person Id could not be found");
+                }
+
+                var result = new PersonDetailDto
+                {
+                    Name = person.Name,
+                    Email = person.Email,
+                    Phone = person.Phone,
+                    Description = person.Description,
+                    Educations = person.Educations,
+                    WorkExperiences = person.WorkExperiences
+                };
+
+                return Results.Ok(result);
             });
 
             // Update a person 
-            app.MapPut("/api/persons/{id}", async (int id, PersonDto dto, CvApiDBContext db) =>
+            app.MapPut("/api/persons/{id}", async (int id, PersonDto dto, CvApiDBContext dbContext) =>
             {
-                var (isIdValid, idErrors) = InputValidator.ValidateId(id);
-                if (!isIdValid) return Results.BadRequest(idErrors);
-
-                var (isValid, errors) = InputValidator.Validate(dto);
-                if (!isValid) return Results.BadRequest(errors);
-
-                var person = await db.Person.FindAsync(id);
-                if (person is null) return Results.NotFound();
+                var person = await dbContext.Person.FindAsync(id);
+                if (person == null)
+                {
+                    return Results.NotFound("Entered person Id could not be found");
+                }
 
                 person.Name = dto.Name;
                 person.Email = dto.Email;
                 person.Phone = dto.Phone;
-                person.Description = dto.Description ?? "";
+                person.Description = dto.Description;
 
-                await db.SaveChangesAsync();
-                return Results.Ok(person);
+                await dbContext.SaveChangesAsync();
 
-                var responseDto = new PersonDto // Kolla Copilot
+                return Results.Ok("Person updated successfully");
+
             });
+
 
             //Remove/Delete a person
             app.MapDelete("/api/persons/{id}", async (int id, CvApiDBContext db) =>
             {
-                var (isValid, errors) = InputValidator.ValidateId(id);
-                if (!isValid) return Results.BadRequest(errors);
+                var person = await db.Person
+                    .Include(p => p.Educations)
+                    .Include(p => p.WorkExperiences)
+                    .FirstOrDefaultAsync(p => p.ID == id);
 
-                var person = await db.Person.FindAsync(id);
-                if (person is null) return Results.NotFound();
+                if (person == null)
+                {
+                    return Results.NotFound("Entered person Id could not be found");
+                }
 
                 db.Person.Remove(person);
                 await db.SaveChangesAsync();
-                return Results.NoContent();
+
+                return Results.Ok("Person updated successfully");
+
             });
+
 
         }
     }
