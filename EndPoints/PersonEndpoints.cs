@@ -24,7 +24,7 @@ namespace CvCodeFirst.EndPoints
 
                 var person = new Person
                 {
-                    Name = dto.Name,
+                    FullName = dto.FullName,
                     Email = dto.Email,
                     Phone = dto.Phone,
                     Description = dto.Description,
@@ -38,7 +38,7 @@ namespace CvCodeFirst.EndPoints
                 // Optional: return PersonDetailDto
                 var result = new PersonDetailDto
                 {
-                    Name = person.Name,
+                    FullName = person.FullName,
                     Email = person.Email,
                     Phone = person.Phone,
                     Description = person.Description,
@@ -59,7 +59,7 @@ namespace CvCodeFirst.EndPoints
 
                 var result = persons.Select(p => new PersonDetailDto
                 {
-                    Name = p.Name,
+                    FullName = p.FullName,
                     Email = p.Email,
                     Phone = p.Phone,
                     Description = p.Description,
@@ -85,7 +85,7 @@ namespace CvCodeFirst.EndPoints
 
                 var result = new PersonDetailDto
                 {
-                    Name = person.Name,
+                    FullName = person.FullName,
                     Email = person.Email,
                     Phone = person.Phone,
                     Description = person.Description,
@@ -105,7 +105,7 @@ namespace CvCodeFirst.EndPoints
                     return Results.NotFound("Entered person Id could not be found");
                 }
 
-                person.Name = dto.Name;
+                person.FullName = dto.FullName;
                 person.Email = dto.Email;
                 person.Phone = dto.Phone;
                 person.Description = dto.Description;

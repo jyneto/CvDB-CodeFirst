@@ -5,6 +5,7 @@ namespace CvCodeFirst.DTOs
     public class EducationDTO
     {
         [Required]
+        [MinLength(5)]
         [MaxLength(50)]
         public required string School { get; set; }
 

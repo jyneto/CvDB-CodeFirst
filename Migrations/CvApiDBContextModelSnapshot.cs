@@ -70,12 +70,13 @@ namespace CvCodeFirst.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Name")
+                    b.Property<string>("FullName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Phone")
-                        .HasColumnType("int");
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ID");
 
@@ -92,21 +93,18 @@ namespace CvCodeFirst.Migrations
 
                     b.Property<string>("Company")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("EndDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("JobTitle")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("PersonID")
                         .HasColumnType("int");
@@ -135,7 +133,7 @@ namespace CvCodeFirst.Migrations
             modelBuilder.Entity("CvCodeFirst.Models.WorkExperience", b =>
                 {
                     b.HasOne("CvCodeFirst.Models.Person", "Person")
-                        .WithMany("Experiences")
+                        .WithMany("WorkExperiences")
                         .HasForeignKey("PersonID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -147,7 +145,7 @@ namespace CvCodeFirst.Migrations
                 {
                     b.Navigation("Educations");
 
-                    b.Navigation("Experiences");
+                    b.Navigation("WorkExperiences");
                 });
 #pragma warning restore 612, 618
         }

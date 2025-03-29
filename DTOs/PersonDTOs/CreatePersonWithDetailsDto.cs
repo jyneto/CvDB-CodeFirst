@@ -6,8 +6,9 @@ namespace CvCodeFirst.DTOs.PersonDTOs
     public class CreatePersonWithDetailsDto
     {
         [Required]
+        [MinLength(5)]
         [MaxLength(50)]
-        public required string Name { get; set; }
+        public required string FullName { get; set; }
 
         [Required]
         [EmailAddress]

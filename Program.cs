@@ -37,11 +37,16 @@ namespace CvCodeFirst
             app.UseAuthorization();
 
             PersonEndpoints.RegisterEndpoints(app);
-            EducationEndPoints.RegisterEndpoints(app);
-            WorkExperienceEndPoints.RegisterEndpoints(app);
+            //EducationEndpoints.RegisterEndpoints(app); 
+            //WorkExperienceEndpoints.RegisterEndpoints(app);
+            GitHubReposEndpoints.RegisterEndpoints(app);
 
 
             app.Run();
+
+
+            //To do: ändra Endpoints till motsvarande ändrade filnamn, kommenterade ut den uppdaterade namn
+            //
         }
     }
 }
