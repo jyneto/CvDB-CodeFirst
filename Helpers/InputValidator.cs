@@ -1,11 +1,7 @@
 ﻿using CvCodeFirst.Data;
 using CvCodeFirst.DTOs;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.Security.Cryptography.Xml;
-using System.Security.Principal;
 using System.Text.Json;
 
 namespace CvCodeFirst.Helpers
@@ -17,7 +13,7 @@ namespace CvCodeFirst.Helpers
         {
             var errors = new List<string>();
 
-            if(string.IsNullOrWhiteSpace(username))
+            if (string.IsNullOrWhiteSpace(username))
             {
                 errors.Add("Github username must not be empty or just whitespace");
                 return (false, errors);
@@ -26,22 +22,22 @@ namespace CvCodeFirst.Helpers
         }
 
         //Validate a list of respiratories
-        public static (List <GithubReposDTO> validatedRepos,List<string> errors ) ValidateGitHubRepositories(List<JsonElement> rawRepositories)
+        public static (List<GithubReposDTO> validatedRepos, List<string> errors) ValidateGitHubRepositories(List<JsonElement> rawRepositories)
         {
             var validatedRepos = new List<GithubReposDTO>();
             var errors = new List<string>();
 
-            foreach (var respository in rawRepositories) 
+            foreach (var respository in rawRepositories)
             {
                 var repoName = respository.TryGetProperty("name", out var nameProp) ? nameProp.GetString() : null;
                 var repoUrl = respository.TryGetProperty("html_url", out var urlProp) ? urlProp.GetString() : null;
 
                 //Validation logic
-                if(string.IsNullOrWhiteSpace(repoName))
+                if (string.IsNullOrWhiteSpace(repoName))
                 {
                     errors.Add("Repository lacks valid name.");
                     continue;
-                
+
                 }
 
                 if (string.IsNullOrWhiteSpace(repoUrl))
@@ -52,7 +48,7 @@ namespace CvCodeFirst.Helpers
 
                 //optional properties
                 var repoLanguage = respository.TryGetProperty("language", out var langProp) ? langProp.GetString() : null;
-                var repoDescription = respository.TryGetProperty("description", out var descProp) ? descProp.GetString(): null;
+                var repoDescription = respository.TryGetProperty("description", out var descProp) ? descProp.GetString() : null;
 
                 validatedRepos.Add(new GithubReposDTO
                 {
@@ -101,7 +97,7 @@ namespace CvCodeFirst.Helpers
             return (true, errors);
         }
 
-        public static async Task<(bool isValid, List<string> errors)> ValidatePersonExistsAsync(int personId, CvApiDBContext dbContext)
+        public static async Task<(bool personExists, List<string> personErrors)> ValidatePersonExistsAsync(int personId, CvApiDBContext dbContext)
         {
             var errors = new List<string>();
             var exists = await dbContext.Person.AnyAsync(p => p.ID == personId);
@@ -113,6 +109,6 @@ namespace CvCodeFirst.Helpers
             return (true, errors);
         }
 
-        
+
     }
 }

@@ -1,11 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 
-namespace CvCodeFirst.DTOs
+namespace CvCodeFirst.DTOs.WorkExperienceDtos
 {
     public class WorkExperienceDTO
     {
-
+        [Required]
+        public int WorkExperienceID { get; set; }
         [Required]
         [MaxLength(50)]
         public required string JobTitle { get; set; }
@@ -23,7 +24,5 @@ namespace CvCodeFirst.DTOs
 
         public DateTime? EndDate { get; set; }
 
-        [Required]
-        public int PersonID { get; set; }
     }
 }

@@ -8,7 +8,7 @@ namespace CvCodeFirst.EndPoints
         public static void RegisterEndpoints(WebApplication app)
         {
             //Get repos from github
-            app.MapGet("/app.github/{username}", async (string githubUsername, IHttpClientFactory httpClientFactory) =>
+            app.MapGet("/app.github/{username}", async (string githubUsername, HttpClient httpClient) =>
             {
                 //Validate username
 
@@ -16,11 +16,10 @@ namespace CvCodeFirst.EndPoints
                 if (!isValidUsername) return Results.BadRequest(usernameErrors);
 
                 // Create an HTTP client for the request
-                var httpClient = httpClientFactory.CreateClient();
                 httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("CvApiApp");
 
                 //Fetch repiratories 
-                var apiResponse = await httpClient.GetAsync($"https://api.github.com/{githubUsername}/repos");
+                var apiResponse = await httpClient.GetAsync($"https://api.github.com/users/{githubUsername}/repos");
                 if (!apiResponse.IsSuccessStatusCode)
                     return Results.NotFound("GitHub user not found");
 

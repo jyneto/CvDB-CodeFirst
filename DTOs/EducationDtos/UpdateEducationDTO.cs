@@ -1,9 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace CvCodeFirst.DTOs
+namespace CvCodeFirst.DTOs.EducatioDto
 {
-    public class EducationDTO
+    public class UpdateEducationDTO
     {
+
+
         [Required]
         [MinLength(5)]
         [MaxLength(50)]
@@ -18,7 +20,5 @@ namespace CvCodeFirst.DTOs
 
         public DateTime? EndDate { get; set; }
 
-        [Required]
-        public int PersonID { get; set; }
     }
 }
