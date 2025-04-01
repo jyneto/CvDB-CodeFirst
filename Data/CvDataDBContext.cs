@@ -13,6 +13,6 @@ namespace CvCodeFirst.Data
         public DbSet<Person> Person{ get; set; }
         public DbSet<Education> Educations { get; set; }
         public DbSet<WorkExperience> WorkExperiences { get; set; }
-
+        
     }
 }

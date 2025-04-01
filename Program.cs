@@ -18,9 +18,17 @@ namespace CvCodeFirst
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            builder.Services.AddHttpClient();
+
+
             builder.Services.AddDbContext<CvApiDBContext>(options =>
             {
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+            });
+
+            builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
+            {
+                options.SerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
             });
 
             var app = builder.Build();
@@ -39,6 +47,7 @@ namespace CvCodeFirst
             PersonEndpoints.RegisterEndpoints(app);
             EducationEndPoints.RegisterEndpoints(app);
             WorkExperienceEndPoints.RegisterEndpoints(app);
+            GitHubReposEndpoints.RegisterEndpoints(app);
 
 
             app.Run();

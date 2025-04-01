@@ -1,24 +1,78 @@
 ﻿using CvCodeFirst.Data;
+using CvCodeFirst.DTOs;
+using CvCodeFirst.DTOs.PersonDTOs;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.Security.Cryptography.Xml;
-using System.Security.Principal;
+using System.Text.Json;
 
 namespace CvCodeFirst.Helpers
 {
 
     public static class InputValidator
     {
+        public static (bool isValid, List<string> errors) ValidateGitHubUsername(string username)
+        {
+            var errors = new List<string>();
+
+            if (string.IsNullOrWhiteSpace(username))
+            {
+                errors.Add("Github username must not be empty or just whitespace");
+                return (false, errors);
+            }
+            return (true, errors);
+        }
+
+        //Validate a list of respiratories
+        public static (List<GithubReposDTO> validatedRepos, List<string> errors) ValidateGitHubRepositories(List<JsonElement> rawRepositories)
+        {
+            var validatedRepos = new List<GithubReposDTO>();
+            var errors = new List<string>();
+
+            foreach (var respository in rawRepositories)
+            {
+                var repoName = respository.TryGetProperty("name", out var nameProp) ? nameProp.GetString() : null;
+                var repoUrl = respository.TryGetProperty("html_url", out var urlProp) ? urlProp.GetString() : null;
+
+                //Validation logic
+                if (string.IsNullOrWhiteSpace(repoName))
+                {
+                    errors.Add("Repository lacks valid name.");
+                    continue;
+
+                }
+
+                if (string.IsNullOrWhiteSpace(repoUrl))
+                {
+                    errors.Add($"Repository '{repoName ?? "(Unnamed)"}' lacks a valid URL.");
+                    continue;
+                }
+
+                //optional properties
+                var repoLanguage = respository.TryGetProperty("language", out var langProp) ? langProp.GetString() : null;
+                var repoDescription = respository.TryGetProperty("description", out var descProp) ? descProp.GetString() : null;
+
+                validatedRepos.Add(new GithubReposDTO
+                {
+                    Name = repoName,
+                    HtmlUrl = repoUrl,
+                    Language = repoLanguage,
+                    Description = repoDescription
+
+                });
+            }
+            return (validatedRepos, errors);
+        }
+
         public static (bool isValid, List<string> errors) Validate<T>(T dto)
         {
             var validationResults = new List<ValidationResult>();
             var context = new ValidationContext(dto);
 
+            // Validate the object itself (e.g., FullName, Email, etc.)
             bool isValid = Validator.TryValidateObject(dto, context, validationResults, true);
             var errors = validationResults.Select(v => v.ErrorMessage ?? "Invalid input").ToList();
 
+            // Check if any string properties are empty or whitespace
             foreach (var prop in typeof(T).GetProperties())
             {
                 if (prop.PropertyType == typeof(string))
@@ -32,8 +86,68 @@ namespace CvCodeFirst.Helpers
                 }
             }
 
-            return (isValid, errors);
+            // Additional recursive validation for nested collections like Educations or WorkExperiences
+            if (dto is CreatePersonWithDetailsDto personDto)
+            {
+                // Validate Educations list if it exists
+                if (personDto.Educations != null)
+                {
+                    foreach (var edu in personDto.Educations)
+                    {
+                        var (eduValid, eduErrors) = Validate(edu);
+                        if (!eduValid)
+                        {
+                            isValid = false;
+                            errors.AddRange(eduErrors.Select(e => $"Education: {e}"));
+                        }
+                    }
+                }
+
+                // Validate WorkExperiences list if it exists
+                if (personDto.WorkExperiences != null)
+                {
+                    foreach (var work in personDto.WorkExperiences)
+                    {
+                        var (workValid, workErrors) = Validate(work);
+                        if (!workValid)
+                        {
+                            isValid = false;
+                            errors.AddRange(workErrors.Select(e => $"WorkExperience: {e}"));
+                        }
+                    }
+                }
+            }
+
+            return (isValid && !errors.Any(), errors);
         }
+
+     
+
+
+
+        //public static (bool isValid, List<string> errors) Validate<T>(T dto)
+        //{
+        //    var validationResults = new List<ValidationResult>();
+        //    var context = new ValidationContext(dto);
+
+        //    bool isValid = Validator.TryValidateObject(dto, context, validationResults, true);
+        //    var errors = validationResults.Select(v => v.ErrorMessage ?? "Invalid input").ToList();
+
+        //    foreach (var prop in typeof(T).GetProperties())
+        //    {
+        //        if (prop.PropertyType == typeof(string))
+        //        {
+        //            var value = prop.GetValue(dto) as string;
+        //            if (string.IsNullOrWhiteSpace(value))
+        //            {
+        //                errors.Add($"{prop.Name} must not be empty or just whitespace.");
+        //                isValid = false;
+        //            }
+        //        }
+        //    }
+
+        //    return (isValid, errors);
+        //}
 
         public static (bool isValid, List<string> errors) ValidateId(int id)
         {
@@ -46,7 +160,7 @@ namespace CvCodeFirst.Helpers
             return (true, errors);
         }
 
-        public static async Task<(bool isValid, List<string> errors)> ValidatePersonExistsAsync(int personId, CvApiDBContext dbContext)
+        public static async Task<(bool personExists, List<string> personErrors)> ValidatePersonExistsAsync(int personId, CvApiDBContext dbContext)
         {
             var errors = new List<string>();
             var exists = await dbContext.Person.AnyAsync(p => p.ID == personId);
@@ -57,5 +171,7 @@ namespace CvCodeFirst.Helpers
             }
             return (true, errors);
         }
+
+
     }
 }

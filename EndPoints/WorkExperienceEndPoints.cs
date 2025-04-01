@@ -1,5 +1,5 @@
 ﻿using CvCodeFirst.Data;
-using CvCodeFirst.DTOs;
+using CvCodeFirst.DTOs.WorkExperienceDtos;
 using CvCodeFirst.Helpers;
 using CvCodeFirst.Models;
 using Microsoft.AspNetCore.Components.Forms;
@@ -16,12 +16,12 @@ namespace CvCodeFirst.EndPoints
         public static void RegisterEndpoints(WebApplication app)
         {
             //Add work experience data related to a person
-            app.MapPost("/api/workexperiences", async (WorkExperienceDTO dto, CvApiDBContext dbContext) =>
+            app.MapPost("api/persons/{personId}/workexperiences", async (int personId, UpdateWorkExperienceDTO dto, CvApiDBContext dbContext) =>
             {
                 var (isValid, errors) = InputValidator.Validate(dto);
                 if (!isValid) return Results.BadRequest(errors);
 
-                var (personExists, personErrors) = await InputValidator.ValidatePersonExistsAsync(dto.PersonID, dbContext);
+                var (personExists, personErrors) = await InputValidator.ValidatePersonExistsAsync(personId, dbContext);
                 if (!personExists) return Results.BadRequest(personErrors);
 
                 var experience = new WorkExperience
@@ -31,55 +31,99 @@ namespace CvCodeFirst.EndPoints
                     Description = dto.Description,
                     StartDate = dto.StartDate,
                     EndDate = dto.EndDate,
-                    PersonID = dto.PersonID
+                    PersonID = personId
                 };
 
                 dbContext.WorkExperiences.Add(experience);
                 await dbContext.SaveChangesAsync();
 
-                return Results.Created($"/api/workexperiences/{experience.WorkExperienceID}", experience);
+                var responseDto = new WorkExperienceDTO
+                {
+                    WorkExperienceID = experience.WorkExperienceID,
+                    JobTitle = experience.JobTitle,
+                    Company = experience.Company,
+                    Description = experience.Description,
+                    StartDate = experience.StartDate,
+                    EndDate = experience.EndDate
+                };
+
+                return Results.Created($"/api/persons/{personId}/workexperiences/{experience.WorkExperienceID}", responseDto);
             });
 
-            //Get/Retrieve all work experience
-            app.MapGet("/workexperiences", async (CvApiDBContext db) =>
-            {
-                var experiences = await db.WorkExperiences.ToListAsync();
-                return Results.Ok(experiences);
-            });
 
+            //app.MapPost("api/persons/{personId}/workexperiences", async (int personId,WorkExperienceDTO dto, CvApiDBContext dbContext) =>
+            //{
+            //    var (isValid, errors) = InputValidator.Validate(dto);
+            //    if (!isValid) return Results.BadRequest(errors);
+
+            //    var (personExists, personErrors) = await InputValidator.ValidatePersonExistsAsync(personId, dbContext);
+            //    if (!personExists) return Results.BadRequest(personErrors);
+
+            //    var experience = new WorkExperience
+            //    {
+            //        JobTitle = dto.JobTitle,
+            //        Company = dto.Company,
+            //        Description = dto.Description,
+            //        StartDate = dto.StartDate,
+            //        EndDate = dto.EndDate,
+            //        PersonID = personId
+            //    };
+
+            //    dbContext.WorkExperiences.Add(experience);
+            //    await dbContext.SaveChangesAsync();
+
+            //    return Results.Created($"/api/workexperiences/{experience.WorkExperienceID}", experience);
+            //});
 
             //Get/Retrieve work experience 
-            app.MapGet("/api/workexperiences/{id}", async (int id, CvApiDBContext dbContext) =>
+            app.MapGet("/api/person/{personId}/workexperiences", async (int personId, CvApiDBContext dbContext) =>
             {
-                var (isValidId, idErrors) = InputValidator.ValidateId(id);
+                var (isValidId, idErrors) = InputValidator.ValidateId(personId);
                 if (!isValidId) return Results.BadRequest(idErrors);
 
-                var experience = await dbContext.WorkExperiences.FindAsync(id);
-                if (experience == null)
+                var (personExists, personErrors) = await InputValidator.ValidatePersonExistsAsync(personId, dbContext);
+                if (!personExists) return Results.BadRequest(personErrors);
+
+                var experiences = await dbContext.WorkExperiences
+                .Where(e => e.PersonID == personId)
+                .ToListAsync();
+
+                if (experiences == null)
                 {
-                    return Results.NotFound("Entered experience Id could not be found");
+                    return Results.NotFound("Entered work experience Id could not be found");
                 }
 
-                return Results.Ok(experience);
+                var experienceDto = experiences.Select(w => new WorkExperienceDTO
+                {
+                    WorkExperienceID = w.WorkExperienceID,
+                    JobTitle = w.JobTitle,
+                    Company = w.Company,
+                    Description = w.Description,
+                    StartDate = w.StartDate,
+                    EndDate = w.EndDate
+
+                }).ToList();
+
+                return Results.Ok(experienceDto);
             });
 
 
-            //Update work experience info related to a specific wokexperience id and specific person
-            app.MapPut("/api/workexperiences/{id}", async (int id, WorkExperienceDTO dto, CvApiDBContext dbContext) =>
+            //Update work experience info related to a specific wokexperience experienceId and specific person
+            app.MapPut("/api/persons/{personId}/workexperiences/{experienceId}", async (int personId,int experienceId, UpdateWorkExperienceDTO dto, CvApiDBContext dbContext) =>
             {
-                var (isValidId, idErrors) = InputValidator.ValidateId(id);
+                var (isValidId, idErrors) = InputValidator.ValidateId(personId);
                 if (!isValidId) return Results.BadRequest(idErrors);
 
                 var (isValid, errors) = InputValidator.Validate(dto);
                 if (!isValid) return Results.BadRequest(errors);
 
-                var (personExists, personErrors) = await InputValidator.ValidatePersonExistsAsync(dto.PersonID, dbContext);
+                var (personExists, personErrors) = await InputValidator.ValidatePersonExistsAsync(personId, dbContext);
                 if (!personExists) return Results.BadRequest(personErrors);
 
-                var experience = await dbContext.WorkExperiences.FindAsync(id);
+                var experience = await dbContext.WorkExperiences.FindAsync(experienceId);
                 if (experience == null)
                 {
-                    return Results.NotFound("Entered experience Id could not be found");
+                    return Results.NotFound("Entered work experience Id could not be found");
                 }
 
                 experience.JobTitle = dto.JobTitle;
@@ -87,7 +131,6 @@ namespace CvCodeFirst.EndPoints
                 experience.Description = dto.Description;
                 experience.StartDate = dto.StartDate;
                 experience.EndDate = dto.EndDate;
-                experience.PersonID = dto.PersonID;
 
                 await dbContext.SaveChangesAsync();
 
@@ -97,20 +140,31 @@ namespace CvCodeFirst.EndPoints
 
 
             //Remove/Delete experience
-            app.MapDelete("/api/workexperiences/{id}", async (int id, CvApiDBContext dbContext) =>
+            app.MapDelete("/api/workexperiences/{personId}/{experienceId}", async (int personId,int experienceId, CvApiDBContext dbContext) =>
             {
-                var (isValidId, idErrors) = InputValidator.ValidateId(id);
+                var (isPersonValid, personIdErrors) = InputValidator.ValidateId(personId);
+                if (!isPersonValid) return Results.BadRequest(personIdErrors);
+
+                var (isValidId, idErrors) = InputValidator.ValidateId(experienceId);
                 if (!isValidId) return Results.BadRequest(idErrors);
 
-                var experience = await dbContext.WorkExperiences.FindAsync(id);
+                // Make sure the person exists
+                var (personExists, personErrors) = await InputValidator.ValidatePersonExistsAsync(personId, dbContext);
+                if (!personExists) return Results.BadRequest(personErrors);
+
+                // Check if education exists for the person
+                var experience = await dbContext.WorkExperiences
+                    .FirstOrDefaultAsync(w => w.WorkExperienceID == experienceId && w.PersonID == personId);
+
                 if (experience == null)
                 {
                     return Results.NotFound("Entered experience could not be found");
                 }
+
                 dbContext.WorkExperiences.Remove(experience);
                 await dbContext.SaveChangesAsync();
 
-                return Results.Ok("Work experience updated successfully");
+                return Results.Ok("Work experience removed successfully");
             });
 
         }

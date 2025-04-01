@@ -5,7 +5,7 @@
 namespace CvCodeFirst.Migrations
 {
     /// <inheritdoc />
-    public partial class DtoEndpointsUpdate : Migration
+    public partial class RemovedIdFromDtos : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

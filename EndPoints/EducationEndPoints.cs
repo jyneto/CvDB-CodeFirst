@@ -1,25 +1,25 @@
 ﻿using CvCodeFirst.Data;
-using CvCodeFirst.DTOs;
+using CvCodeFirst.DTOs.EducatioDto;
 using CvCodeFirst.DTOs.PersonDTO;
 using CvCodeFirst.Helpers;
 using CvCodeFirst.Models;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Reflection.Metadata.Ecma335;
 using System.Xml;
 
 namespace CvCodeFirst.EndPoints
 {
     public class EducationEndPoints
-    {
+    {   //Kola upp varför personId syns
         public static void RegisterEndpoints(WebApplication app) 
         {
-
-            app.MapPost("/api/educations", async (EducationDTO dto, CvApiDBContext db) =>
+            app.MapPost("/api/persons/{personId}/educations", async (int personId, UpdateEducationDTO dto, CvApiDBContext dbContext) =>
             {
                 var (isValid, errors) = InputValidator.Validate(dto);
                 if (!isValid) return Results.BadRequest(errors);
 
-                var (personExists, personErrors) = await InputValidator.ValidatePersonExistsAsync(dto.PersonID, db);
+                var (personExists, personErrors) = await InputValidator.ValidatePersonExistsAsync(personId, dbContext);
                 if (!personExists) return Results.BadRequest(personErrors);
 
                 var education = new Education
@@ -28,66 +28,77 @@ namespace CvCodeFirst.EndPoints
                     Degree = dto.Degree,
                     StartDate = dto.StartDate,
                     EndDate = dto.EndDate,
-                    PersonID = dto.PersonID
+                    PersonID = personId
                 };
 
-                db.Educations.Add(education);
-                await db.SaveChangesAsync();
+                dbContext.Educations.Add(education);
+                await dbContext.SaveChangesAsync();
 
-                return Results.Created($"/api/educations/{education.EducationID}", education);
-            });
-
-
-
-            //Get/Retrieve all educations  
-            app.MapGet("/educations", async (CvApiDBContext db) => {
-
-                var educations = await db.Educations.ToListAsync();
-                return Results.Ok(educations);
-
-            });
-
-
-            //Get/Retrieve eduction info by id
-            app.MapGet("/api/educations/{id}", async (int id, CvApiDBContext db) =>
-            {
-                var (isValidId, idErrors) = InputValidator.ValidateId(id);
-                if (!isValidId) return Results.BadRequest(idErrors);
-
-                var education = await db.Educations.FindAsync(id);
-                if (education == null)
+                var responseDto = new EducationDTO
                 {
-                    return Results.NotFound("Entered Id could not be found");
-                }
+                    EducationID = education.EducationID,
+                    School = education.School,
+                    Degree = education.Degree,
+                    StartDate = education.StartDate,
+                    EndDate = education.EndDate
+                };
 
-                return Results.Ok(education);
+                return Results.Created($"/api/persons/{personId}/educations/{education.EducationID}", responseDto);
             });
 
-
-            app.MapPut("/api/educations/{id}", async (int id, EducationDTO dto, CvApiDBContext dbContext) =>
+           // Get / Retrieve eduction info by id
+            app.MapGet("/api/person/{personId}/educations", async (int personId, CvApiDBContext dbContext) =>
             {
-                var (isValidId, idErrors) = InputValidator.ValidateId(id);
+                var (isValidId, idErrors) = InputValidator.ValidateId(personId);
                 if (!isValidId) return Results.BadRequest(idErrors);
 
+                var (personExists, personErrors) = await InputValidator.ValidatePersonExistsAsync(personId, dbContext);
+                if (!personExists) return Results.BadRequest(personErrors);
+
+                var educations = await dbContext.Educations
+                .Where(e => e.PersonID == personId)
+                .ToListAsync();
+         
+                var educationDto = educations.Select(e => new EducationDTO
+                {
+                    EducationID = e.EducationID,
+                    School = e.School,
+                    Degree = e.Degree,
+                    StartDate = e.StartDate,
+                    EndDate = e.EndDate,
+
+                }).ToList();
+
+
+                return Results.Ok(educationDto);
+            });
+
+          app.MapPut("/api/persons/{personId}/educations/{educationId}", async ( int personId, int educationId, UpdateEducationDTO dto, CvApiDBContext dbContext) =>
+          {
+                // Validate the education ID
+                var (isValidId, idErrors) = InputValidator.ValidateId(educationId);
+                if (!isValidId) return Results.BadRequest(idErrors);
+
+                // Validate DTO content (optional if you already validate via [Required] etc.)
                 var (isValid, errors) = InputValidator.Validate(dto);
                 if (!isValid) return Results.BadRequest(errors);
 
-                var (personExists, personErrors) = await InputValidator.ValidatePersonExistsAsync(dto.PersonID, dbContext);
+                // Make sure the person exists
+                var (personExists, personErrors) = await InputValidator.ValidatePersonExistsAsync(personId, dbContext);
                 if (!personExists) return Results.BadRequest(personErrors);
 
-                var education = await dbContext.Educations.FindAsync(id);
-
-                if (education == null)
+                // Find the education by ID
+                var education = await dbContext.Educations.FindAsync(educationId);
+                if (education == null || education.PersonID != personId)
                 {
-                    return Results.NotFound("Entered Id could not be found");
+                    return Results.NotFound("Education not found for the specified person.");
                 }
 
-
+                // Update allowed fields
                 education.School = dto.School;
                 education.Degree = dto.Degree;
                 education.StartDate = dto.StartDate;
                 education.EndDate = dto.EndDate;
-                education.PersonID = dto.PersonID;
 
                 await dbContext.SaveChangesAsync();
 
@@ -96,23 +107,57 @@ namespace CvCodeFirst.EndPoints
 
 
 
-            app.MapDelete("/api/educations/{id}", async (int id, CvApiDBContext dbContext) =>
-            {
-                var (isValidId, idErrors) = InputValidator.ValidateId(id);
-                if (!isValidId) return Results.BadRequest(idErrors);
+            //app.MapDelete("/api/educations/{educationId}", async (int educationId, CvApiDBContext dbContext) =>
+            //{
+            //    var (isValidId, idErrors) = InputValidator.ValidateId(educationId);
+            //    if (!isValidId) return Results.BadRequest(idErrors);
 
-                var education = await dbContext.Educations.FindAsync(id);
-                if (education == null)
+            //    var education = await dbContext.Educations.FindAsync(educationId);
+
+
+            //    if (education == null)
+            //    {
+            //        return Results.NotFound("Entered education Id could not be found");
+            //    }
+
+
+            //    dbContext.Educations.Remove(education);
+            //    await dbContext.SaveChangesAsync();
+
+            //    return Results.Ok("Education removed successfully");
+            //});
+
+            app.MapDelete("/api/educations/{personId}/{educationId}", async (int personId, int educationId, CvApiDBContext dbContext) =>
+            {
+                // Validate IDs
+                var (isPersonValid, personIdErrors) = InputValidator.ValidateId(personId);
+                var (isEducationValid, educationIdErrors) = InputValidator.ValidateId(educationId);
+
+                if (!isPersonValid) return Results.BadRequest(personIdErrors);
+                if (!isEducationValid) return Results.BadRequest(educationIdErrors);
+
+                // Check if person exists
+                var person = await dbContext.Person.FindAsync(personId);
+                if (person == null)
                 {
-                    return Results.NotFound("Entered education could not be found");
+                    return Results.NotFound("The person with the given ID does not exist.");
                 }
 
+                // Check if education exists for the person
+                var education = await dbContext.Educations
+                    .FirstOrDefaultAsync(e => e.EducationID == educationId && e.PersonID == personId);
+
+                if (education == null)
+                {
+                    return Results.NotFound("The specified education record for this person does not exist.");
+                }
+
+                // Delete the education record
                 dbContext.Educations.Remove(education);
                 await dbContext.SaveChangesAsync();
 
-                return Results.Ok("Education updated successfully");
+                return Results.Ok("Education removed successfully for the specified person.");
             });
-
 
 
         }

@@ -4,6 +4,7 @@ using CvCodeFirst.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CvCodeFirst.Migrations
 {
     [DbContext(typeof(CvApiDBContext))]
-    partial class CvApiDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250401064346_FinalAddedMoreDTO")]
+    partial class FinalAddedMoreDTO
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
