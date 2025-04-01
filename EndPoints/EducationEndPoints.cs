@@ -107,26 +107,57 @@ namespace CvCodeFirst.EndPoints
 
 
 
-            app.MapDelete("/api/educations/{educationId}", async (int educationId, CvApiDBContext dbContext) =>
+            //app.MapDelete("/api/educations/{educationId}", async (int educationId, CvApiDBContext dbContext) =>
+            //{
+            //    var (isValidId, idErrors) = InputValidator.ValidateId(educationId);
+            //    if (!isValidId) return Results.BadRequest(idErrors);
+
+            //    var education = await dbContext.Educations.FindAsync(educationId);
+
+
+            //    if (education == null)
+            //    {
+            //        return Results.NotFound("Entered education Id could not be found");
+            //    }
+
+
+            //    dbContext.Educations.Remove(education);
+            //    await dbContext.SaveChangesAsync();
+
+            //    return Results.Ok("Education removed successfully");
+            //});
+
+            app.MapDelete("/api/educations/{personId}/{educationId}", async (int personId, int educationId, CvApiDBContext dbContext) =>
             {
-                var (isValidId, idErrors) = InputValidator.ValidateId(educationId);
-                if (!isValidId) return Results.BadRequest(idErrors);
+                // Validate IDs
+                var (isPersonValid, personIdErrors) = InputValidator.ValidateId(personId);
+                var (isEducationValid, educationIdErrors) = InputValidator.ValidateId(educationId);
 
-                var education = await dbContext.Educations.FindAsync(educationId);
+                if (!isPersonValid) return Results.BadRequest(personIdErrors);
+                if (!isEducationValid) return Results.BadRequest(educationIdErrors);
 
+                // Check if person exists
+                var person = await dbContext.Person.FindAsync(personId);
+                if (person == null)
+                {
+                    return Results.NotFound("The person with the given ID does not exist.");
+                }
+
+                // Check if education exists for the person
+                var education = await dbContext.Educations
+                    .FirstOrDefaultAsync(e => e.EducationID == educationId && e.PersonID == personId);
 
                 if (education == null)
                 {
-                    return Results.NotFound("Entered education Id could not be found");
+                    return Results.NotFound("The specified education record for this person does not exist.");
                 }
 
-
+                // Delete the education record
                 dbContext.Educations.Remove(education);
                 await dbContext.SaveChangesAsync();
 
-                return Results.Ok("Education removed successfully");
+                return Results.Ok("Education removed successfully for the specified person.");
             });
-
 
 
         }

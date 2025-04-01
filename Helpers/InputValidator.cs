@@ -1,5 +1,6 @@
 ﻿using CvCodeFirst.Data;
 using CvCodeFirst.DTOs;
+using CvCodeFirst.DTOs.PersonDTOs;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
@@ -67,9 +68,11 @@ namespace CvCodeFirst.Helpers
             var validationResults = new List<ValidationResult>();
             var context = new ValidationContext(dto);
 
+            // Validate the object itself (e.g., FullName, Email, etc.)
             bool isValid = Validator.TryValidateObject(dto, context, validationResults, true);
             var errors = validationResults.Select(v => v.ErrorMessage ?? "Invalid input").ToList();
 
+            // Check if any string properties are empty or whitespace
             foreach (var prop in typeof(T).GetProperties())
             {
                 if (prop.PropertyType == typeof(string))
@@ -83,8 +86,68 @@ namespace CvCodeFirst.Helpers
                 }
             }
 
-            return (isValid, errors);
+            // Additional recursive validation for nested collections like Educations or WorkExperiences
+            if (dto is CreatePersonWithDetailsDto personDto)
+            {
+                // Validate Educations list if it exists
+                if (personDto.Educations != null)
+                {
+                    foreach (var edu in personDto.Educations)
+                    {
+                        var (eduValid, eduErrors) = Validate(edu);
+                        if (!eduValid)
+                        {
+                            isValid = false;
+                            errors.AddRange(eduErrors.Select(e => $"Education: {e}"));
+                        }
+                    }
+                }
+
+                // Validate WorkExperiences list if it exists
+                if (personDto.WorkExperiences != null)
+                {
+                    foreach (var work in personDto.WorkExperiences)
+                    {
+                        var (workValid, workErrors) = Validate(work);
+                        if (!workValid)
+                        {
+                            isValid = false;
+                            errors.AddRange(workErrors.Select(e => $"WorkExperience: {e}"));
+                        }
+                    }
+                }
+            }
+
+            return (isValid && !errors.Any(), errors);
         }
+
+     
+
+
+
+        //public static (bool isValid, List<string> errors) Validate<T>(T dto)
+        //{
+        //    var validationResults = new List<ValidationResult>();
+        //    var context = new ValidationContext(dto);
+
+        //    bool isValid = Validator.TryValidateObject(dto, context, validationResults, true);
+        //    var errors = validationResults.Select(v => v.ErrorMessage ?? "Invalid input").ToList();
+
+        //    foreach (var prop in typeof(T).GetProperties())
+        //    {
+        //        if (prop.PropertyType == typeof(string))
+        //        {
+        //            var value = prop.GetValue(dto) as string;
+        //            if (string.IsNullOrWhiteSpace(value))
+        //            {
+        //                errors.Add($"{prop.Name} must not be empty or just whitespace.");
+        //                isValid = false;
+        //            }
+        //        }
+        //    }
+
+        //    return (isValid, errors);
+        //}
 
         public static (bool isValid, List<string> errors) ValidateId(int id)
         {

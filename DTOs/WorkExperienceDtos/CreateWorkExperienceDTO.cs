@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace CvCodeFirst.DTOs.WorkExperienceDtos
 {
-    public class UpdateWorkExperienceDTO
+    public class CreateWorkExperienceDTO
     {
         [Required]
         [MaxLength(50)]
@@ -24,5 +24,7 @@ namespace CvCodeFirst.DTOs.WorkExperienceDtos
         public DateTime StartDate { get; set; }
 
         public DateTime? EndDate { get; set; }
+
+
     }
 }

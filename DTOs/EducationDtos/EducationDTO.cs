@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using CvCodeFirst.Helpers;
+using System.ComponentModel.DataAnnotations;
 
 namespace CvCodeFirst.DTOs.EducatioDto
 {
@@ -9,10 +10,12 @@ namespace CvCodeFirst.DTOs.EducatioDto
         [Required]
         [MinLength(5)]
         [MaxLength(50)]
+        [NotPlaceholder("string")]
         public required string School { get; set; }
 
         [Required]
         [MaxLength(100)]
+        [NotPlaceholder("string")]
         public required string Degree { get; set; }
 
         [Required]

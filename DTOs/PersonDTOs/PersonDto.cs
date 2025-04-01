@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using CvCodeFirst.Helpers;
+using System.ComponentModel.DataAnnotations;
 
 namespace CvCodeFirst.DTOs.PersonDTO
 {
@@ -6,21 +7,24 @@ namespace CvCodeFirst.DTOs.PersonDTO
     {
         //Use to create or update a person
         [Required]
-        [MinLength(5)]
-        [MaxLength(50)]
-        public required string FullName { get; set; }
+        [MinLength(2)]
+        [NotPlaceholder("string")]
+        public string FullName { get; set; }
 
         [Required]
         [EmailAddress]
-        public required string Email { get; set; }
+        [NotPlaceholder("user@example.com")]
+        public string Email { get; set; }
 
         [Required]
         [RegularExpression(@"^\+?[0-9\s\-]+$", ErrorMessage = "Ogiltigt telefonnummer.")]
-        public required string Phone { get; set; }
+        [NotPlaceholder("492255--3-202745  2684607895353 4614 76348918335")]
+        public string Phone { get; set; }
 
         [Required]
         [MaxLength(500)]
-        public required string Description { get; set; }
+        [NotPlaceholder("string")]
+        public string Description { get; set; }
 
     }
 }

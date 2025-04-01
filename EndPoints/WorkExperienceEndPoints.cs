@@ -140,16 +140,27 @@ namespace CvCodeFirst.EndPoints
 
 
             //Remove/Delete experience
-            app.MapDelete("/api/workexperiences/{experienceId}", async (int experienceId, CvApiDBContext dbContext) =>
+            app.MapDelete("/api/workexperiences/{personId}/{experienceId}", async (int personId,int experienceId, CvApiDBContext dbContext) =>
             {
+                var (isPersonValid, personIdErrors) = InputValidator.ValidateId(personId);
+                if (!isPersonValid) return Results.BadRequest(personIdErrors);
+
                 var (isValidId, idErrors) = InputValidator.ValidateId(experienceId);
                 if (!isValidId) return Results.BadRequest(idErrors);
 
-                var experience = await dbContext.WorkExperiences.FindAsync(experienceId);
+                // Make sure the person exists
+                var (personExists, personErrors) = await InputValidator.ValidatePersonExistsAsync(personId, dbContext);
+                if (!personExists) return Results.BadRequest(personErrors);
+
+                // Check if education exists for the person
+                var experience = await dbContext.WorkExperiences
+                    .FirstOrDefaultAsync(w => w.WorkExperienceID == experienceId && w.PersonID == personId);
+
                 if (experience == null)
                 {
                     return Results.NotFound("Entered experience could not be found");
                 }
+
                 dbContext.WorkExperiences.Remove(experience);
                 await dbContext.SaveChangesAsync();
 
