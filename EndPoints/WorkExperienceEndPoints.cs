@@ -51,29 +51,6 @@ namespace CvCodeFirst.EndPoints
             });
 
 
-            //app.MapPost("api/persons/{personId}/workexperiences", async (int personId,WorkExperienceDTO dto, CvApiDBContext dbContext) =>
-            //{
-            //    var (isValid, errors) = InputValidator.Validate(dto);
-            //    if (!isValid) return Results.BadRequest(errors);
-
-            //    var (personExists, personErrors) = await InputValidator.ValidatePersonExistsAsync(personId, dbContext);
-            //    if (!personExists) return Results.BadRequest(personErrors);
-
-            //    var experience = new WorkExperience
-            //    {
-            //        JobTitle = dto.JobTitle,
-            //        Company = dto.Company,
-            //        Description = dto.Description,
-            //        StartDate = dto.StartDate,
-            //        EndDate = dto.EndDate,
-            //        PersonID = personId
-            //    };
-
-            //    dbContext.WorkExperiences.Add(experience);
-            //    await dbContext.SaveChangesAsync();
-
-            //    return Results.Created($"/api/workexperiences/{experience.WorkExperienceID}", experience);
-            //});
 
             //Get/Retrieve work experience 
             app.MapGet("/api/person/{personId}/workexperiences", async (int personId, CvApiDBContext dbContext) =>

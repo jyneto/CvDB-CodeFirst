@@ -105,28 +105,6 @@ namespace CvCodeFirst.EndPoints
                 return Results.Ok("Education updated successfully");
             });
 
-
-
-            //app.MapDelete("/api/educations/{educationId}", async (int educationId, CvApiDBContext dbContext) =>
-            //{
-            //    var (isValidId, idErrors) = InputValidator.ValidateId(educationId);
-            //    if (!isValidId) return Results.BadRequest(idErrors);
-
-            //    var education = await dbContext.Educations.FindAsync(educationId);
-
-
-            //    if (education == null)
-            //    {
-            //        return Results.NotFound("Entered education Id could not be found");
-            //    }
-
-
-            //    dbContext.Educations.Remove(education);
-            //    await dbContext.SaveChangesAsync();
-
-            //    return Results.Ok("Education removed successfully");
-            //});
-
             app.MapDelete("/api/educations/{personId}/{educationId}", async (int personId, int educationId, CvApiDBContext dbContext) =>
             {
                 // Validate IDs
