@@ -30,7 +30,6 @@ namespace CvCodeFirst.EndPoints
                 //Validate repo using InputValidator
                 var (validateRepos, validationErrors) = InputValidator.ValidateGitHubRepositories(deserializedRepos!);
 
-                //
                 return Results.Ok(new { Repositories = validateRepos, Errors = validationErrors });
 
             });
